@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "✅ NØVĀ's VERY LONG ALL-ROUNDER BOT is Running 24/7 🔥"
+    return "✅ NØVĀ's Super Long Bot is Running 24/7 🔥"
 
 # ==================== BOT SETUP ====================
 intents = discord.Intents.all()
@@ -19,8 +19,8 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 @bot.event
 async def on_ready():
-    print(f"✅ NØVĀ's SUPER LONG BOT IS FULLY ONLINE → {bot.user}")
-    print(f"Connected to {len(bot.guilds)} servers | Ready for everything!")
+    print(f"✅ NØVĀ's SUPER LONG BOT IS ONLINE → {bot.user}")
+    print(f"Connected to {len(bot.guilds)} servers")
 
 @bot.event
 async def on_message(message):
@@ -32,19 +32,19 @@ async def on_message(message):
 money = {}
 levels = {}
 xp = {}
-warnings = {}
 
-# ==================== MULTI / REPEAT SECTION ====================
-@bot.command(aliases=["multi", "multimsg"])
+# ==================== MULTI MESSAGE ====================
+@bot.command(aliases=["multi", "multimsg", "repeatmany"])
 async def multi(ctx, times: int, *, text="hi"):
-    """!multi 5 hello"""
-    if times > 20:
-        times = 20
-        await ctx.send("⚠️ Max 20 messages!")
+    """Example: !multi 5 Hello bro"""
+    if times > 25:
+        times = 25
+        await ctx.send("⚠️ Max 25 messages allowed!")
     for _ in range(times):
         await ctx.send(text)
-        await asyncio.sleep(0.6)
+        await asyncio.sleep(0.65)
 
+# ==================== REPEAT & SAY ====================
 @bot.command(name="say", aliases=["repeat", "echo", "tell", "parrot"])
 async def say_command(ctx, *, text=None):
     if not text:
@@ -53,7 +53,7 @@ async def say_command(ctx, *, text=None):
 
 @bot.command()
 async def spam(ctx, times: int = 5, *, text="NØVĀ Bot 🔥"):
-    if times > 15: times = 15
+    if times > 20: times = 20
     for _ in range(times):
         await ctx.send(text)
         await asyncio.sleep(0.7)
@@ -67,7 +67,7 @@ async def dm(ctx, user: discord.User, *, message=None):
         await user.send(f"**📱 Message from {ctx.author}**\n\n{message}\n\n─ Sent via NØVĀ's Bot")
         await ctx.send(f"✅ DM sent to **{user}**")
     except:
-        await ctx.send("❌ Could not send DM")
+        await ctx.send("❌ Could not send DM (User DMs closed)")
 
 @bot.command()
 async def dmall(ctx, *, message):
@@ -80,9 +80,9 @@ async def dmall(ctx, *, message):
             await asyncio.sleep(1)
         except:
             pass
-    await ctx.send(f"✅ Sent to {sent} members")
+    await ctx.send(f"✅ Broadcast sent to {sent} members")
 
-# ==================== ADMIN / MOD COMMANDS ====================
+# ==================== ADMIN / MOD ====================
 @bot.command()
 @commands.has_permissions(kick_members=True)
 async def kick(ctx, member: discord.Member, *, reason="No reason"):
@@ -94,17 +94,6 @@ async def kick(ctx, member: discord.Member, *, reason="No reason"):
 async def ban(ctx, member: discord.Member, *, reason="No reason"):
     await member.ban(reason=reason)
     await ctx.send(f"🔨 Banned {member}")
-
-@bot.command()
-@commands.has_permissions(ban_members=True)
-async def unban(ctx, *, member_name):
-    banned = await ctx.guild.bans()
-    for entry in banned:
-        if str(entry.user) == member_name or entry.user.name == member_name:
-            await ctx.guild.unban(entry.user)
-            await ctx.send(f"✅ Unbanned {entry.user}")
-            return
-    await ctx.send("User not found")
 
 @bot.command()
 @commands.has_permissions(manage_messages=True)
@@ -130,15 +119,15 @@ async def purge(ctx, amount: int = 20):
     await ctx.channel.purge(limit=amount + 1)
     await ctx.send(f"🧹 Purged {amount} messages", delete_after=3)
 
-# ==================== LEVEL SYSTEM ====================
+# ==================== LEVELS & LEADERBOARD ====================
 @bot.event
 async def on_message(message):
     if message.author.bot: return
     user = message.author.id
     xp[user] = xp.get(user, 0) + random.randint(5, 20)
-    current_level = levels.get(user, 1)
-    if xp[user] >= current_level * 120:
-        levels[user] = current_level + 1
+    current = levels.get(user, 1)
+    if xp[user] >= current * 120:
+        levels[user] = current + 1
         xp[user] = 0
         await message.channel.send(f"🎉 {message.author.mention} leveled up to **Level {levels[user]}**!")
     await bot.process_commands(message)
@@ -146,12 +135,12 @@ async def on_message(message):
 @bot.command()
 async def level(ctx, member: discord.Member = None):
     member = member or ctx.author
-    await ctx.send(f"📊 **{member}** → Level **{levels.get(member.id, 1)}** | XP **{xp.get(member.id, 0)}**")
+    await ctx.send(f"📊 **{member}** → Level: **{levels.get(member.id, 1)}** | XP: **{xp.get(member.id, 0)}**")
 
 @bot.command()
 async def leaderboard(ctx):
     sorted_list = sorted(levels.items(), key=lambda x: x[1], reverse=True)[:15]
-    msg = "**🏆 Top 15 Leaderboard**\n"
+    msg = "**🏆 Global Leaderboard**\n"
     for i, (uid, lvl) in enumerate(sorted_list, 1):
         try:
             user = await bot.fetch_user(uid)
@@ -165,45 +154,33 @@ async def leaderboard(ctx):
 async def earn(ctx):
     amount = random.randint(30, 100)
     money[ctx.author.id] = money.get(ctx.author.id, 0) + amount
-    await ctx.send(f"💰 You earned **{amount}** coins! Balance: **{money[ctx.author.id]}**")
+    await ctx.send(f"💰 +{amount} coins! Balance: **{money[ctx.author.id]}**")
 
-@bot.command(aliases=["bal", "balance", "coins"])
+@bot.command(aliases=["bal", "balance"])
 async def money(ctx):
     await ctx.send(f"💵 **{ctx.author.mention}** has **{money.get(ctx.author.id, 0)}** coins")
-
-@bot.command()
-async def give(ctx, member: discord.Member, amount: int):
-    if amount <= 0: return await ctx.send("Positive amount only!")
-    if money.get(ctx.author.id, 0) < amount:
-        return await ctx.send("❌ Not enough coins!")
-    money[ctx.author.id] -= amount
-    money[member.id] = money.get(member.id, 0) + amount
-    await ctx.send(f"✅ Gave **{amount}** coins to {member.mention}")
 
 # ==================== FUN COMMANDS ====================
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"🏓 Pong! `{round(bot.latency*1000)}ms`")
 
-@bot.command(aliases=["hi", "hey", "sup"])
+@bot.command(aliases=["hi", "hey"])
 async def hello(ctx):
     await ctx.send(f"Yo {ctx.author.mention}! NØVĀ's Long Bot here 🔥")
 
 @bot.command()
 async def joke(ctx):
-    jokes = [
-        "Why do programmers prefer dark mode? Light attracts bugs! 😂",
-        "Why was the JavaScript developer sad? He didn't know how to 'null' his feelings.",
-        "I'm reading a book on anti-gravity. It's impossible to put down!",
-        "Why do Python programmers have lamps? Because they prefer light mode? No wait..."
-    ]
+    jokes = ["Why do programmers prefer dark mode? Light attracts bugs! 😂",
+             "Why was the JavaScript developer sad? He didn't know how to 'null' his feelings.",
+             "I'm reading a book on anti-gravity. It's impossible to put down!"]
     await ctx.send(random.choice(jokes))
 
 @bot.command(name="8ball")
 async def eight_ball(ctx, *, question=None):
     if not question: return await ctx.send("Ask a question!")
-    answers = ["Yes!", "No!", "Maybe...", "Definitely yes", "Very doubtful", "Ask again later"]
-    await ctx.send(f"🎱 **Answer:** {random.choice(answers)}")
+    answers = ["Yes!", "No!", "Maybe...", "Definitely", "Very doubtful"]
+    await ctx.send(f"🎱 {random.choice(answers)}")
 
 @bot.command()
 async def slap(ctx, member: discord.Member):
@@ -213,21 +190,16 @@ async def slap(ctx, member: discord.Member):
 async def hug(ctx, member: discord.Member):
     await ctx.send(f"{ctx.author.mention} hugged {member.mention} 🤗")
 
-@bot.command()
-async def kiss(ctx, member: discord.Member):
-    await ctx.send(f"{ctx.author.mention} kissed {member.mention} 😘")
-
 # ==================== HELP ====================
 @bot.command()
 async def help(ctx):
-    embed = discord.Embed(title="⚡ NØVĀ's VERY LONG BOT", color=0x00ffff, timestamp=datetime.datetime.now())
+    embed = discord.Embed(title="⚡ NØVĀ's Very Long Bot", color=0x00ffff)
     embed.add_field(name="🔁 Multi & Repeat", value="`!multi <number> <text>`\n`!say` `!spam`", inline=False)
-    embed.add_field(name="📱 DM", value="`!dm @user message`\n`!dmall`", inline=False)
-    embed.add_field(name="🛠️ Admin", value="`!kick` `!ban` `!mute` `!unmute` `!purge`", inline=False)
+    embed.add_field(name="📱 DM", value="`!dm @user message`", inline=False)
+    embed.add_field(name="🛠️ Admin", value="`!kick` `!ban` `!mute` `!purge`", inline=False)
     embed.add_field(name="📊 Levels", value="`!level` `!leaderboard`", inline=False)
-    embed.add_field(name="💰 Economy", value="`!earn` `!bal` `!give`", inline=False)
-    embed.add_field(name="😂 Fun", value="`!ping` `!hello` `!joke` `!8ball` `!slap` `!hug` `!kiss`", inline=False)
-    embed.set_footer(text="Made for NØVĀ • Very Long Version")
+    embed.add_field(name="💰 Economy", value="`!earn` `!bal`", inline=False)
+    embed.add_field(name="😂 Fun", value="`!ping` `!hello` `!joke` `!8ball`", inline=False)
     await ctx.send(embed=embed)
 
 def run_bot():
